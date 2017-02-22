@@ -3,11 +3,18 @@
 
 # Question 1 (Naked Twins)
 Q: How do we use constraint propagation to solve the naked twins problem?  
-A: *Student should provide answer here*
+A: The sudoku constraint is that every unit (row, column, or square) be a permutation of the digits 1-9.
+Therefore, the fact that two boxes that belong to a particular unit have the same two digits as their only possible
+values forbids those two values from being valid options for the remaining boxes of that unit. Indeed, the
+constraint that each digit (1-9) only appear once in a unit requires that, since the two digits are certain to be
+found in the two 'twin' boxes (even if we don't know yet which digit goes in which 'twin' box), they are certain not
+to be found in the other boxes of that unit.
 
 # Question 2 (Diagonal Sudoku)
 Q: How do we use constraint propagation to solve the diagonal sudoku problem?  
-A: *Student should provide answer here*
+A: We include an additional type of unit in our unit list. Concretely, this amounts to adding two new units to our list,
+namely the two main diagonals of the board. We then apply constraint propagation and search as before, only this time
+they apply to the two diagonals as well.
 
 ### Install
 
