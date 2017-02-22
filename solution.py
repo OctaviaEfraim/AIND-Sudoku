@@ -1,6 +1,13 @@
 # <editor-fold desc="Encode the board.">
 def cross(A, B):
-    """Cross product of elements in A and elements in B."""
+    """Compute cross product of elements in A and elements in B.
+
+    Args:
+        A: an iterable
+        B: an iterable
+    Returns:
+        The cross product of A an B in the form of a list
+    """
     return [a + b for a in A for b in B]
 
 
@@ -24,24 +31,24 @@ peers = dict((s, set(sum(units[s], [])) - set([s])) for s in boxes)
 
 # <editor-fold desc="Encode the game and and display a particular state.">
 def grid_values(grid):
-    """
-    Convert grid into a dict of {box: char} with '123456789' for empties.
+    """Convert a grid into a dictionary of {box: char} with '123456789' for empties.
+
     Args:
-        grid(string) - A grid in string form.
-    Return:
-        A grid in dictionary form.
-            Keys: The boxes, e.g., 'A1'
-            Values: The value in each box, e.g., '8'. If the box has no value, then the value will be '123456789'.
+        grid(string): a grid in string form
+    Returns:
+        A grid in dictionary form
+            Keys: the boxes, e.g., 'A1'
+            Values: the value in each box, e.g., '8'. If the box has no value, then the value will be '123456789'.
     """
     assert len(grid) == 81, "Input grid must be a string of length 81 (9x9)"
     return {box: '123456789' if value == '.' else value for box in boxes for box, value in zip(boxes, grid)}
 
 
 def display(values):
-    """
-    Display the values as a 2-D grid.
+    """Display a sudoku as a 2-D grid. If the state is False (no solution found), display a message instead.
+
     Args:
-        values(dict): The sudoku in dictionary form
+        values(dict): a sudoku in dictionary form
     Returns:
         None
     """
@@ -53,7 +60,7 @@ def display(values):
                           for c in cols))
             if r in 'CF': print(line)
     else:
-        print('Sorry, no solution could be found.')
+        print('Sorry, no solution could be found, so there is nothing to display.')
     return
 # </editor-fold>
 
@@ -63,7 +70,15 @@ assignments = []
 
 
 def assign_value(values, box, value):
-    """Assign a value to a given box. If it updates the board record it."""
+    """Assign a value to a given box. If it updates the board record it.
+
+    Args:
+        values(dict): a sudoku in dictionary form
+        box(string): the box whose value is to be updated
+        value(string): the new value
+    Returns:
+        The resulting sudoku in dictionary form
+    """
     values[box] = value
     if len(value) == 1:
         assignments.append(values.copy())
@@ -76,9 +91,9 @@ def eliminate(values):
     """Eliminate a box's value from the possible values of all its peers.
 
     Args:
-        values(dict): The sudoku in dictionary form.
+        values(dict): a sudoku in dictionary form
     Returns:
-        The resulting sudoku in dictionary form.
+        The resulting sudoku in dictionary form
     """
     for box, value in values.items():
         if len(value) == 1:
@@ -88,11 +103,12 @@ def eliminate(values):
 
 
 def only_choice(values):
-    """In every unit with a value that only fits in one box, assign the value to that box.
+    """In every unit with a value that only fits in one box, assign that value to that box.
 
     Args:
-        values(dict): The sudoku in dictionary form
-    Output: The resulting sudoku in dictionary form.
+        values(dict): a sudoku in dictionary form
+    Returns:
+        The resulting sudoku in dictionary form
     """
     for unit in unitlist:
         for digit in '123456789':
@@ -103,15 +119,19 @@ def only_choice(values):
 
 
 def naked_tuplet(values, n):
-    """In every unit where n values are only possible in n boxes, eliminate those values from the remaining boxes.
+    """Find tuplets and eliminate their value from their peers in that unit.
+
+    In every unit where a value consisting of n digits is only possible in n boxes, eliminate those digits
+    from the possible values of the remaining boxes in that unit. The set of n boxes sharing the n-digit value
+    is a tuplet.
 
     Args:
-        values(dict): a dictionary of the form {'box_name': '123456789', ...}
+        values(dict): a sudoku in dictionary form
         n(int): the length of the tuplet
     Returns:
-        The values dictionary with the naked tuplet eliminated from peers in unit.
+        The resulting sudoku in dictionary form
     """
-    assert n <= 8, "The tuplet cannot exceed the length of a unit (9)! And 'nonuplets' are useless."
+    assert n <= 8, "The tuplet cannot exceed the length of a unit (9), and 'nonuplets' are useless!"
     # In each unit
     for unit in unitlist:
         # get all boxes with a value of length n.
@@ -121,7 +141,7 @@ def naked_tuplet(values, n):
             # for each one
             for i in range(len(potential_tuplets)):
                 box_1, box_value_1 = potential_tuplets[i], values[potential_tuplets[i]]
-                same_value = [box_1]
+                same_value = [box_1] # store boxes with same value
                 # compare it with the other boxes with a value of length n in the unit.
                 for j in range(i + 1, len(potential_tuplets)):
                     box_2, box_value_2 = potential_tuplets[j], values[potential_tuplets[j]]
@@ -137,12 +157,12 @@ def naked_tuplet(values, n):
 
 
 def naked_twins(values):
-    """In every unit where two values are only possible in two boxes, eliminate those values from the remaining boxes.
+    """Implement a specific case of a naked tuplet, where n is 2.
 
     Args:
-        values(dict): a dictionary of the form {'box_name': '123456789', ...}
+        values(dict): a sudoku in dictionary form
     Returns:
-        The values dictionary with the naked twins eliminated from peers in unit.
+        The resulting sudoku in dictionary form
     """
     return naked_tuplet(values, 2)
 # </editor-fold>
@@ -150,7 +170,16 @@ def naked_twins(values):
 
 # <editor-fold desc="Implement constraint propagation and search.">
 def reduce_puzzle(values):
-    stalled = False
+    """Implement constraint propagation.
+
+    Apply repeatedly three constraints: eliminate, only choice, and naked twins, to an unsolved puzzle.
+
+    Args:
+        values(dict): a sudoku in dictionary form
+    Returns:
+        The solved sudoku in dictionary form, or False if no solution is found
+    """
+    stalled = False # Have we stopped making progress?
     while not stalled:
         # Check how many boxes have a determined value.
         solved_values_before = len([box for box in values.keys() if len(values[box]) == 1])
@@ -171,16 +200,22 @@ def reduce_puzzle(values):
 
 
 def search(values):
-    """Using depth-first search and propagation, create a search tree and solve the sudoku."""
+    """Using depth-first search and propagation, create a search tree and solve the sudoku.
+
+    Args:
+        values(dict): a sudoku in dictionary form
+    Returns:
+        The solved sudoku in dictionary form, or False if no solution is found
+    """
     # Reduce the puzzle.
     values = reduce_puzzle(values)
     if values is False:
         return False # Failed earlier
     if all(len(values[box]) == 1 for box in boxes):
         return values # Solved!
-    # Choose one of the unfilled squares with the fewest possibilities.
+    # Choose one of the unfilled boxes with the fewest possibilities.
     n, b = min((len(values[box]), box) for box in boxes if len(values[box]) > 1)
-    # Use recursion to solve each one of the resulting sudokus, and if one returns a value (not False), return that answer.
+    # Use recursion to solve each one of the resulting sudokus. If one returns a value (not False), return it.
     for value in values[b]:
         new_sudoku = values.copy()
         new_sudoku[b] = value
@@ -192,13 +227,13 @@ def search(values):
 
 # <editor-fold desc="Solve the game.">
 def solve(grid):
-    """
-    Find the solution to a Sudoku grid.
+    """Find the solution to a Sudoku grid.
+
     Args:
         grid(string): a string representing a sudoku grid.
             Example: '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
     Returns:
-        The dictionary representation of the final sudoku grid. False if no solution exists.
+        The dictionary representation of the final sudoku grid, or False if no solution exists
     """
     return search(grid_values(grid))
 # </editor-fold>
