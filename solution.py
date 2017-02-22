@@ -118,7 +118,7 @@ def only_choice(values):
     return values
 
 
-def naked_tuplet(values, n):
+def naked_tuplets(values, n):
     """Find tuplets and eliminate their value from their peers in that unit.
 
     In every unit where a value consisting of n digits is only possible in n boxes, eliminate those digits
@@ -147,8 +147,8 @@ def naked_tuplet(values, n):
                     box_2, box_value_2 = potential_tuplets[j], values[potential_tuplets[j]]
                     if box_value_1 == box_value_2:
                         same_value.append(box_2)
-                # If there are at least as many boxes with the same value as there are digits in that value
-                if len(same_value) >= n:
+                # If there are as many boxes with the same value as there are digits in that value
+                if len(same_value) == n:
                     # eliminate the digits of the shared value as possibilities for their unit peers.
                     for peer in [peer for peer in unit if peer not in same_value]:
                         for digit in box_value_1:
@@ -164,7 +164,7 @@ def naked_twins(values):
     Returns:
         The resulting sudoku in dictionary form
     """
-    return naked_tuplet(values, 2)
+    return naked_tuplets(values, 2)
 # </editor-fold>
 
 
