@@ -102,35 +102,49 @@ def only_choice(values):
     return values
 
 
+def naked_tuplet(values, n):
+    """In every unit where n values are only possible in n boxes, eliminate those values from the remaining boxes.
+
+    Args:
+        values(dict): a dictionary of the form {'box_name': '123456789', ...}
+        n(int): the length of the tuplet
+    Returns:
+        The values dictionary with the naked tuplet eliminated from peers in unit.
+    """
+    assert n <= 8, "The tuplet cannot exceed the length of a unit (9)! And 'nonuplets' are useless."
+    # In each unit
+    for unit in unitlist:
+        # get all boxes with a value of length n.
+        potential_tuplets = [box for box in unit if len(values[box]) == n]
+        # If there are at least n such boxes
+        if len(potential_tuplets) >= n:
+            # for each one
+            for i in range(len(potential_tuplets)):
+                box_1, box_value_1 = potential_tuplets[i], values[potential_tuplets[i]]
+                same_value = [box_1]
+                # compare it with the other boxes with a value of length n in the unit.
+                for j in range(i + 1, len(potential_tuplets)):
+                    box_2, box_value_2 = potential_tuplets[j], values[potential_tuplets[j]]
+                    if box_value_1 == box_value_2:
+                        same_value.append(box_2)
+                # If there are at least as many boxes with the same value as there are digits in that value
+                if len(same_value) >= n:
+                    # eliminate the digits of the shared value as possibilities for their unit peers.
+                    for peer in [peer for peer in unit if peer not in same_value]:
+                        for digit in box_value_1:
+                            values = assign_value(values, peer, values[peer].replace(digit, ''))
+    return values
+
+
 def naked_twins(values):
     """In every unit where two values are only possible in two boxes, eliminate those values from the remaining boxes.
 
     Args:
         values(dict): a dictionary of the form {'box_name': '123456789', ...}
     Returns:
-        The values dictionary with the naked twins eliminated from peers.
+        The values dictionary with the naked twins eliminated from peers in unit.
     """
-    # In each unit
-    for unit in unitlist:
-        # get all boxes with a value of length two.
-        potential_twins = [box for box in unit if len(values[box]) == 2]
-        # If there are at least two such boxes
-        if len(potential_twins) >= 2:
-            # for each one
-            for i in range(len(potential_twins)):
-                box_1, box_value_1 = potential_twins[i], values[potential_twins[i]]
-                # compare it with the other boxes with a value of length two in the unit.
-                for j in range(i + 1, len(potential_twins)):
-                    box_2, box_value_2 = potential_twins[j], values[potential_twins[j]]
-                    # If we find two boxes with the same value, we've found a pair of naked twins.
-                    if box_value_1 == box_value_2:
-                        # print("Found naked twins:", box_1, box_2, box_value_1)
-                        # Eliminate the values of the naked twins as possibilities for their peers.
-                        # Remove the twin from the peers.
-                        for peer in [peer for peer in unit if peer != box_1 and peer != box_2]:
-                            for digit in box_value_1:
-                                values = assign_value(values, peer, values[peer].replace(digit, ''))
-    return values
+    return naked_tuplet(values, 2)
 # </editor-fold>
 
 
