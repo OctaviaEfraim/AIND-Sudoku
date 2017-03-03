@@ -1,3 +1,5 @@
+import random
+
 # <editor-fold desc="Encode the board.">
 def cross(A, B):
     """Compute cross product of elements in A and elements in B.
@@ -213,8 +215,13 @@ def search(values):
         return False # Failed earlier
     if all(len(values[box]) == 1 for box in boxes):
         return values # Solved!
-    # Choose one of the unfilled boxes with the fewest possibilities.
-    n, b = min((len(values[box]), box) for box in boxes if len(values[box]) > 1)
+    # Choose one of the unfilled boxes with the fewest possibilities. Break ties with random choice.
+    n = min(len(values[box]) for box in boxes if len(values[box]) > 1)
+    b = random.choice([box for box in boxes if len(values[box]) == n])
+
+    # Alternatively, simply choose the first such box.
+    # n, b = min((len(values[box]), box) for box in boxes if len(values[box]) > 1)
+
     # Use recursion to solve each one of the resulting sudokus. If one returns a value (not False), return it.
     for value in values[b]:
         new_sudoku = values.copy()
@@ -222,6 +229,26 @@ def search(values):
         attempt = search(new_sudoku)
         if attempt:
             return attempt
+# </editor-fold>
+
+
+# <editor-fold desc="Generate a Sudoku grid.">
+def generate_full_grid(diagonal=False):
+    """Generate a full Sudoku grid, with all values shown."""
+    if not diagonal:
+        unitlist = row_units + column_units + square_units
+    grid = '.' * len(boxes)
+    return ''.join(solve(grid).values())
+
+
+def generate_puzzle_grid(full_grid, proportion_hidden=0.5):
+    """Generate a grid with hidden values from ones with all the values observable."""
+    n_hidden = int(len(grid) * proportion_hidden)
+    puzzle_grid = grid_values(full_grid)
+    for i in range(n_hidden):
+        box = random.choice([box for box in boxes if puzzle_grid[box] != '.'])
+        puzzle_grid[box] = '.'
+    return ''.join(puzzle_grid.values())
 # </editor-fold>
 
 
