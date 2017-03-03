@@ -235,10 +235,8 @@ def search(values):
 # <editor-fold desc="Generate a Sudoku grid.">
 def generate_full_grid(diagonal=False):
     """Generate a full Sudoku grid, with all values shown."""
-    if not diagonal:
-        unitlist = row_units + column_units + square_units
     grid = '.' * len(boxes)
-    return ''.join(solve(grid).values())
+    return ''.join(solve(grid, diagonal=diagonal).values())
 
 
 def generate_puzzle_grid(full_grid, proportion_hidden=0.5):
@@ -253,7 +251,7 @@ def generate_puzzle_grid(full_grid, proportion_hidden=0.5):
 
 
 # <editor-fold desc="Solve the game.">
-def solve(grid):
+def solve(grid, diagonal=True):
     """Find the solution to a Sudoku grid.
 
     Args:
@@ -262,6 +260,11 @@ def solve(grid):
     Returns:
         The dictionary representation of the final sudoku grid, or False if no solution exists
     """
+    if not diagonal:
+        global unitlist, units, peers
+        unitlist = row_units + column_units + square_units
+        units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
+        peers = dict((s, set(sum(units[s], [])) - set([s])) for s in boxes)
     return search(grid_values(grid))
 # </editor-fold>
 
