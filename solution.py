@@ -21,8 +21,8 @@ boxes = cross(rows, cols)
 row_units = [cross(r, cols) for r in rows]
 column_units = [cross(rows, c) for c in cols]
 square_units = [cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123', '456', '789')]
-diag_unit_1 = [rows[int(i) - 1] + i for i in cols]
-diag_unit_2 = [rows[int(i) - 1] + cols[::-1][int(i) - 1] for i in cols]
+diag_unit_1 = [r + c for r, c in zip(rows, cols)]
+diag_unit_2 = [r + c for r, c in zip(rows, cols[::-1])]
 diag_units = [diag_unit_1, diag_unit_2]
 
 # These are better handled from `solve`, to allow for diagonal option.
