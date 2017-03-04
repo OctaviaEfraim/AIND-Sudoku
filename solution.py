@@ -25,6 +25,7 @@ diag_unit_1 = [rows[int(i) - 1] + i for i in cols]
 diag_unit_2 = [rows[int(i) - 1] + cols[::-1][int(i) - 1] for i in cols]
 diag_units = [diag_unit_1, diag_unit_2]
 
+# These are better handled from `solve`, to allow for diagonal option.
 unitlist = row_units + column_units + square_units + diag_units
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
 peers = dict((s, set(sum(units[s], [])) - set([s])) for s in boxes)
@@ -260,8 +261,12 @@ def solve(grid, diagonal=True):
     Returns:
         The dictionary representation of the final sudoku grid, or False if no solution exists
     """
-    if not diagonal:
-        global unitlist, units, peers
+    global unitlist, units, peers
+    if diagonal:
+        unitlist = row_units + column_units + square_units + diag_units
+        units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
+        peers = dict((s, set(sum(units[s], [])) - set([s])) for s in boxes)
+    else:
         unitlist = row_units + column_units + square_units
         units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
         peers = dict((s, set(sum(units[s], [])) - set([s])) for s in boxes)
