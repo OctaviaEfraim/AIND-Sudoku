@@ -80,12 +80,11 @@ def assign_value(values, box, value):
         box(string): the box whose value is to be updated
         value(string): the new value
     Returns:
-        The resulting sudoku in dictionary form
+        None
     """
     values[box] = value
     if len(value) == 1:
         assignments.append(values.copy())
-    return values
 # </editor-fold>
 
 
@@ -96,13 +95,13 @@ def eliminate(values):
     Args:
         values(dict): a sudoku in dictionary form
     Returns:
-        The resulting sudoku in dictionary form
+        None
     """
     for box, value in values.items():
         if len(value) == 1:
             for peer in peers[box]:
-                values = assign_value(values, peer, values[peer].replace(value, ''))
-    return values
+                # values = assign_value(values, peer, values[peer].replace(value, ''))
+                assign_value(values, peer, values[peer].replace(value, ''))
 
 
 def only_choice(values):
@@ -111,14 +110,14 @@ def only_choice(values):
     Args:
         values(dict): a sudoku in dictionary form
     Returns:
-        The resulting sudoku in dictionary form
+        None
     """
     for unit in unitlist:
         for digit in '123456789':
             dplaces = [box for box in unit if digit in values[box]]
             if len(dplaces) == 1:
-                values = assign_value(values, dplaces[0], digit)
-    return values
+                # values = assign_value(values, dplaces[0], digit)
+                assign_value(values, dplaces[0], digit)
 
 
 def naked_tuplets(values, n):
@@ -132,7 +131,7 @@ def naked_tuplets(values, n):
         values(dict): a sudoku in dictionary form
         n(int): the length of the tuplet
     Returns:
-        The resulting sudoku in dictionary form
+        None
     """
     assert n <= 8, "The tuplet cannot exceed the length of a unit (9), and 'nonuplets' are useless!"
     # In each unit
@@ -155,8 +154,8 @@ def naked_tuplets(values, n):
                     # eliminate the digits of the shared value as possibilities for their unit peers.
                     for peer in [peer for peer in unit if peer not in same_value]:
                         for digit in box_value_1:
-                            values = assign_value(values, peer, values[peer].replace(digit, ''))
-    return values
+                            # values = assign_value(values, peer, values[peer].replace(digit, ''))
+                            assign_value(values, peer, values[peer].replace(digit, ''))
 
 
 def naked_twins(values):
@@ -165,9 +164,9 @@ def naked_twins(values):
     Args:
         values(dict): a sudoku in dictionary form
     Returns:
-        The resulting sudoku in dictionary form
+        None
     """
-    return naked_tuplets(values, 2)
+    naked_tuplets(values, 2)
 # </editor-fold>
 
 
@@ -180,18 +179,18 @@ def reduce_puzzle(values):
     Args:
         values(dict): a sudoku in dictionary form
     Returns:
-        The solved sudoku in dictionary form, or False if no solution is found
+        True if the sudoku has been solved, or False if no solution is found
     """
     stalled = False # Have we stopped making progress?
     while not stalled:
         # Check how many boxes have a determined value.
         solved_values_before = len([box for box in values.keys() if len(values[box]) == 1])
         # Use the eliminate strategy.
-        values = eliminate(values)
+        eliminate(values)
         # Use the only choice strategy.
-        values = only_choice(values)
+        only_choice(values)
         # Use the naked twins strategy.
-        values = naked_twins(values)
+        naked_twins(values)
         # Check how many boxes have a determined value, to compare.
         solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
         # If no new values were added, stop the loop.
@@ -199,7 +198,7 @@ def reduce_puzzle(values):
         # Sanity check, return False if there is a box with zero available values:
         if len([box for box in values.keys() if len(values[box]) == 0]):
             return False
-    return values
+    return True
 
 
 def search(values):
@@ -208,14 +207,15 @@ def search(values):
     Args:
         values(dict): a sudoku in dictionary form
     Returns:
-        The solved sudoku in dictionary form, or False if no solution is found
+        True if the sudoku has been solved before search, the solution if it has been solved
+         using search, or False if no solution is found
     """
     # Reduce the puzzle.
-    values = reduce_puzzle(values)
+    reduce_puzzle(values)
     if values is False:
         return False # Failed earlier
     if all(len(values[box]) == 1 for box in boxes):
-        return values # Solved!
+        return True # Solved!
     # Choose one of the unfilled boxes with the fewest possibilities. Break ties with random choice.
     n = min(len(values[box]) for box in boxes if len(values[box]) > 1)
     b = random.choice([box for box in boxes if len(values[box]) == n])
@@ -229,7 +229,7 @@ def search(values):
         new_sudoku[b] = value
         attempt = search(new_sudoku)
         if attempt:
-            return attempt
+            return new_sudoku
 # </editor-fold>
 
 
@@ -270,7 +270,9 @@ def solve(grid, diagonal=True):
         unitlist = row_units + column_units + square_units
         units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
         peers = dict((s, set(sum(units[s], [])) - set([s])) for s in boxes)
-    return search(grid_values(grid))
+    puzzle = grid_values(grid)
+    if search(puzzle): # either True, or a solved grid
+        return puzzle
 # </editor-fold>
 
 
@@ -286,3 +288,5 @@ if __name__ == '__main__':
         pass
     except:
         print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
+
+# TODO: finish fixing the return value issue. It works as it is, but the puzzle generation is now buggy. When done, commit changes to a new branch.
