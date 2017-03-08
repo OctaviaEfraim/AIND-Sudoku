@@ -100,7 +100,6 @@ def eliminate(values):
     for box, value in values.items():
         if len(value) == 1:
             for peer in peers[box]:
-                # values = assign_value(values, peer, values[peer].replace(value, ''))
                 assign_value(values, peer, values[peer].replace(value, ''))
 
 
@@ -116,7 +115,6 @@ def only_choice(values):
         for digit in '123456789':
             dplaces = [box for box in unit if digit in values[box]]
             if len(dplaces) == 1:
-                # values = assign_value(values, dplaces[0], digit)
                 assign_value(values, dplaces[0], digit)
 
 
@@ -154,7 +152,6 @@ def naked_tuplets(values, n):
                     # eliminate the digits of the shared value as possibilities for their unit peers.
                     for peer in [peer for peer in unit if peer not in same_value]:
                         for digit in box_value_1:
-                            # values = assign_value(values, peer, values[peer].replace(digit, ''))
                             assign_value(values, peer, values[peer].replace(digit, ''))
 
 
